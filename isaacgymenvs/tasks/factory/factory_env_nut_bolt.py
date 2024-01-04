@@ -234,7 +234,9 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
                                                                    gymapi.DOMAIN_ACTOR)
             self.shape_ids = [link7_id, hand_id, left_finger_id, right_finger_id]
 
+
             franka_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, franka_handle)
+
             for shape_id in self.shape_ids:
                 franka_shape_props[shape_id].friction = self.cfg_base.env.franka_friction
                 franka_shape_props[shape_id].rolling_friction = 0.0  # default = 0.0

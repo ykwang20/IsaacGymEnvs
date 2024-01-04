@@ -14,35 +14,7 @@
       <!-- <preserveWorldVelocity>true</preserveWorldVelocity> -->
     </plugin>
   </gazebo>
-  <link name="table">
-  <visual>
-      <geometry>
-        <box size="1.28 0.75 1.6"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0 "/>
-      <material name="silver">
-        <color rgba="0.753 0.753 0.753 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <box size="1.28 0.75 1.6"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0.0475"/>
-      <mass value="10"/>
-      <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="1e-4" iyz="0.0" izz="1e-4"/>
-    </inertial>
-  </link>
-
-  <joint name="table_joint" type="fixed">
-    <parent link="table"/>
-    <child link="link_base"/>
-    <origin rpy="0 0 -1.5708" xyz="0 0.29 0.8"/>
-  </joint>
-
+  
   <material name="Black">
     <color rgba="0.0 0.0 0.0 1.0"/>
   </material>
@@ -288,12 +260,12 @@
     <link name="panda_hand">
         <visual>
             <geometry>
-                <mesh filename="../../urdf/franka_description/meshes/visual/hand.dae"/>
+                <mesh filename="/home/yikai/IsaacGymEnvs/assets/urdf/franka_description/meshes/visual/hand.dae"/>
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="../../urdf/franka_description/meshes/collision/hand.obj"/>
+                <mesh filename="/home/yikai/IsaacGymEnvs/assets/urdf/franka_description/meshes/collision/hand.obj"/>
             </geometry>
         </collision>
     </link>
@@ -316,12 +288,12 @@
     <link name="panda_leftfinger">
         <visual>
             <geometry>
-                <mesh filename="../../urdf/franka_description/meshes/visual/finger.dae"/>
+                <mesh filename="/home/yikai/IsaacGymEnvs/assets/urdf/franka_description/meshes/visual/finger.dae"/>
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="../mesh/factory_franka_table/factory_franka_finger_coll_subdiv_6x.obj"/>
+                <mesh filename="/home/yikai/IsaacGymEnvs/assets/factory/mesh/factory_franka_table/factory_franka_finger_coll_subdiv_6x.obj"/>
             </geometry>
         </collision>
     </link>
@@ -329,13 +301,13 @@
         <visual>
             <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="../../urdf/franka_description/meshes/visual/finger.dae"/>
+                <mesh filename="/home/yikai/IsaacGymEnvs/assets/urdf/franka_description/meshes/visual/finger.dae"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="../mesh/factory_franka_table/factory_franka_finger_coll_subdiv_6x.obj"/>
+                <mesh filename="/home/yikai/IsaacGymEnvs/assets/factory/mesh/factory_franka_table/factory_franka_finger_coll_subdiv_6x.obj"/>
             </geometry>
         </collision>
     </link>
@@ -349,99 +321,5 @@
         <origin rpy="0 0 0" xyz="0 0 0.112071"/>
     </joint>
     <link name="panda_fingertip_centered"/>
-  
-  <transmission name="tran1">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint1">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor1">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>100</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="tran2">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint2">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor2">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>reduction</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="tran3">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint3">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor3">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>reduction</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="tran4">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint4">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor3">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>reduction</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="tran5">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint5">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor5">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>reduction</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="tran6">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint6">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor6">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>reduction</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="tran7">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint7">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor7">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>reduction</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <gazebo reference="link_base">
-    <selfCollide>true</selfCollide>
-  </gazebo>
-  <gazebo reference="link1">
-    <selfCollide>true</selfCollide>
-  </gazebo>
-  <gazebo reference="link2">
-    <selfCollide>true</selfCollide>
-  </gazebo>
-  <gazebo reference="link3">
-    <selfCollide>true</selfCollide>
-  </gazebo>
-  <gazebo reference="link4">
-    <selfCollide>true</selfCollide>
-  </gazebo>
-  <gazebo reference="link5">
-    <selfCollide>true</selfCollide>
-  </gazebo>
-  <gazebo reference="link6">
-    <selfCollide>true</selfCollide>
-  </gazebo>
-  <gazebo reference="link7">
-    <selfCollide>true</selfCollide>
-  </gazebo>
+
 </robot>

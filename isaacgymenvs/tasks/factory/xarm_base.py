@@ -108,11 +108,11 @@ class XarmBase(VecTask, FactoryABCBase):
     def import_franka_assets(self):
         """Set Franka and table asset options. Import assets."""
 
-        urdf_root = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'assets', 'factory', 'urdf')
-        franka_file = 'factory_franka.urdf'
+        urdf_root = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'assets', 'urdf','arm_hand')
+        franka_file = 'arm_hand.urdf'
 
         franka_options = gymapi.AssetOptions()
-        franka_options.flip_visual_attachments = True
+        franka_options.flip_visual_attachments = False
         franka_options.fix_base_link = True
         franka_options.collapse_fixed_joints = False
         franka_options.thickness = 0.0  # default = 0.02

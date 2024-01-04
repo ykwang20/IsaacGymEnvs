@@ -226,15 +226,17 @@ class XarmEnv(XarmBase, FactoryABCEnv):
             self.table_actor_ids_sim.append(actor_count)
             actor_count += 1
 
-            link7_id = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'panda_link7', gymapi.DOMAIN_ACTOR)
+            link7_id = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'link7', gymapi.DOMAIN_ACTOR)
             hand_id = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'panda_hand', gymapi.DOMAIN_ACTOR)
             left_finger_id = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'panda_leftfinger',
                                                                   gymapi.DOMAIN_ACTOR)
             right_finger_id = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'panda_rightfinger',
                                                                    gymapi.DOMAIN_ACTOR)
             self.shape_ids = [link7_id, hand_id, left_finger_id, right_finger_id]
+            print('shape_ids: ', self.shape_ids)
 
             franka_shape_props = self.gym.get_actor_rigid_shape_properties(env_ptr, franka_handle)
+            print('franka_shape_props: ', len(franka_shape_props))
             for shape_id in self.shape_ids:
                 franka_shape_props[shape_id].friction = self.cfg_base.env.franka_friction
                 franka_shape_props[shape_id].rolling_friction = 0.0  # default = 0.0
