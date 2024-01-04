@@ -22,7 +22,7 @@ env:
     num_gripper_lift_sim_steps: 25  # number of timesteps to reserve for lift after last step of episode
 
 randomize:
-    franka_arm_initial_dof_pos: [0.3413, -0.8011, -0.0670, -1.8299,  0.0266,  1.0185,  1.0927]
+    franka_arm_initial_dof_pos: [0., 0., 0., 1.,  0.,  1.0185,  0.]
     fingertip_midpoint_pos_initial: [0.0, -0.2, 0.2]  # initial position of hand above table
     fingertip_midpoint_pos_noise: [0.2, 0.2, 0.1]  # noise on hand position
     fingertip_midpoint_rot_initial: [3.1416, 0, 3.1416]  # initial rotation of fingertips (Euler)

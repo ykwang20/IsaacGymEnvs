@@ -27,6 +27,7 @@
   <material name="Silver">
     <color rgba="0.753 0.753 0.753 1.0"/>
   </material>
+  
   <link name="link_base">
     <inertial>
       <origin rpy="0 0 0" xyz="-0.021131 -0.0016302 0.056488"/>
@@ -260,12 +261,12 @@
     <link name="panda_hand">
         <visual>
             <geometry>
-                <mesh filename="/home/yikai/IsaacGymEnvs/assets/urdf/franka_description/meshes/visual/hand.dae"/>
+                <mesh filename="../franka_description/meshes/visual/hand.dae"/>
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="/home/yikai/IsaacGymEnvs/assets/urdf/franka_description/meshes/collision/hand.obj"/>
+                <mesh filename="../franka_description/meshes/collision/hand.obj"/>
             </geometry>
         </collision>
     </link>
@@ -288,12 +289,12 @@
     <link name="panda_leftfinger">
         <visual>
             <geometry>
-                <mesh filename="/home/yikai/IsaacGymEnvs/assets/urdf/franka_description/meshes/visual/finger.dae"/>
+                <mesh filename="../franka_description/meshes/visual/finger.dae"/>
             </geometry>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="/home/yikai/IsaacGymEnvs/assets/factory/mesh/factory_franka_table/factory_franka_finger_coll_subdiv_6x.obj"/>
+                <mesh filename="../../factory/mesh/factory_franka_table/factory_franka_finger_coll_subdiv_6x.obj"/>
             </geometry>
         </collision>
     </link>
@@ -301,13 +302,13 @@
         <visual>
             <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/yikai/IsaacGymEnvs/assets/urdf/franka_description/meshes/visual/finger.dae"/>
+                <mesh filename="../franka_description/meshes/visual/finger.dae"/>
             </geometry>
         </visual>
         <collision>
             <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="/home/yikai/IsaacGymEnvs/assets/factory/mesh/factory_franka_table/factory_franka_finger_coll_subdiv_6x.obj"/>
+                <mesh filename="../../factory/mesh/factory_franka_table/factory_franka_finger_coll_subdiv_6x.obj"/>
             </geometry>
         </collision>
     </link>

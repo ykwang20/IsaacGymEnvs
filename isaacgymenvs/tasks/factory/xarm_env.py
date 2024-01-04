@@ -145,7 +145,7 @@ class XarmEnv(XarmBase, FactoryABCEnv):
         franka_pose = gymapi.Transform()
         franka_pose.p.x = self.cfg_base.env.franka_depth
         franka_pose.p.y = 0.0
-        franka_pose.p.z = 0.0
+        franka_pose.p.z = self.cfg_base.env.table_height
         franka_pose.r = gymapi.Quat(0.0, 0.0, 1.0, 0.0)
 
         table_pose = gymapi.Transform()
