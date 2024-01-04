@@ -448,6 +448,7 @@ class XarmBase(VecTask, FactoryABCBase):
             ctrl_target_fingertip_midpoint_quat=self.ctrl_target_fingertip_midpoint_quat,
             ctrl_target_gripper_dof_pos=self.ctrl_target_gripper_dof_pos,
             device=self.device)
+        print('ctrl_target_dof_pos',self.ctrl_target_dof_pos[0])
 
         self.gym.set_dof_position_target_tensor_indexed(self.sim,
                                                         gymtorch.unwrap_tensor(self.ctrl_target_dof_pos),

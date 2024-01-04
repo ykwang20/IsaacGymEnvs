@@ -297,6 +297,7 @@ class XarmTask(XarmEnv, FactoryABCTask):
         if do_scale:
             pos_actions = pos_actions @ torch.diag(torch.tensor(self.cfg_task.rl.pos_action_scale, device=self.device))
         self.ctrl_target_fingertip_midpoint_pos = self.fingertip_midpoint_pos + pos_actions
+        print('fingertip_mid_pos',self.fingertip_midpoint_pos[0])
 
         # Interpret actions as target rot (axis-angle) displacements
         rot_actions = actions[:, 3:6]
@@ -371,7 +372,8 @@ class XarmTask(XarmEnv, FactoryABCTask):
         delta_hand_pose[:, 2] = lift_distance
 
         # Step sim
-        for _ in range(sim_steps):
+        for i in range(sim_steps):
+            print('lift',i)
             self._apply_actions_as_ctrl_targets(delta_hand_pose, franka_gripper_width, do_scale=False)
             self.render()
             self.gym.simulate(self.sim)

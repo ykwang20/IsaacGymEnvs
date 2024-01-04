@@ -52,7 +52,7 @@ rl:
     success_bonus: 0.0  # bonus if nut has been lifted
 
 ctrl:
-    ctrl_type: joint_space_id  # {gym_default,
+    ctrl_type: gym_default  # {gym_default,
                                #  joint_space_ik, joint_space_id, 
                                #  task_space_impedance, operational_space_motion, 
                                #  open_loop_force, closed_loop_force,
