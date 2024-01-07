@@ -14,7 +14,7 @@ sim:
 env:
     numEnvs: ${resolve_default:128,${...num_envs}}
     numObservations: 20
-    numActions: 26
+    numActions: 28
 
     close_and_lift: True  # close gripper and lift after last step of episode
     num_gripper_move_sim_steps: 20  # number of timesteps to reserve for moving gripper before first step of episode

@@ -141,11 +141,11 @@ class XarmTask(XarmEnv, FactoryABCTask):
         # In this policy, episode length is constant
         is_last_step = (self.progress_buf[0] == self.max_episode_length - 1)
 
-        if self.cfg_task.env.close_and_lift:
-            # At this point, robot has executed RL policy. Now close gripper and lift (open-loop)
-            if is_last_step:
-                #self._close_gripper(sim_steps=self.cfg_task.env.num_gripper_close_sim_steps)
-                self._lift_gripper(sim_steps=self.cfg_task.env.num_gripper_lift_sim_steps)
+        # if self.cfg_task.env.close_and_lift:
+        #     # At this point, robot has executed RL policy. Now close gripper and lift (open-loop)
+        #     if is_last_step:
+        #         #self._close_gripper(sim_steps=self.cfg_task.env.num_gripper_close_sim_steps)
+        #         self._lift_gripper(sim_steps=self.cfg_task.env.num_gripper_lift_sim_steps)
 
         self.refresh_base_tensors()
         self.refresh_env_tensors()
@@ -326,7 +326,7 @@ class XarmTask(XarmEnv, FactoryABCTask):
 
             self.ctrl_target_fingertip_contact_wrench = torch.cat((force_actions, torque_actions), dim=-1)
 
-        self.ctrl_target_gripper_dof_pos = actions[:, -self.num_hand_dofs:]
+        self.ctrl_target_gripper_dof_pos = actions[:, -16:]
 
         self.generate_ctrl_signals()
 
