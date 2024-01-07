@@ -208,39 +208,29 @@ class XarmBase(VecTask, FactoryABCBase):
         self.hand_angvel = self.body_angvel[:, self.hand_body_id_env, 0:3]
         self.hand_jacobian = self.jacobian[:, self.hand_body_id_env - 1, 0:6, 0:7]  # minus 1 because base is fixed
 
-        self.left_finger_pos = self.body_pos[:, self.left_finger_body_id_env, 0:3]
-        self.left_finger_quat = self.body_quat[:, self.left_finger_body_id_env, 0:4]
-        self.left_finger_linvel = self.body_linvel[:, self.left_finger_body_id_env, 0:3]
-        self.left_finger_angvel = self.body_angvel[:, self.left_finger_body_id_env, 0:3]
-        self.left_finger_jacobian = self.jacobian[:, self.left_finger_body_id_env - 1, 0:6, 0:7]  # minus 1 because base is fixed
+        
 
-        self.right_finger_pos = self.body_pos[:, self.right_finger_body_id_env, 0:3]
-        self.right_finger_quat = self.body_quat[:, self.right_finger_body_id_env, 0:4]
-        self.right_finger_linvel = self.body_linvel[:, self.right_finger_body_id_env, 0:3]
-        self.right_finger_angvel = self.body_angvel[:, self.right_finger_body_id_env, 0:3]
-        self.right_finger_jacobian = self.jacobian[:, self.right_finger_body_id_env - 1, 0:6, 0:7]  # minus 1 because base is fixed
+        # self.left_finger_force = self.contact_force[:, self.left_finger_body_id_env, 0:3]
+        # self.right_finger_force = self.contact_force[:, self.right_finger_body_id_env, 0:3]
 
-        self.left_finger_force = self.contact_force[:, self.left_finger_body_id_env, 0:3]
-        self.right_finger_force = self.contact_force[:, self.right_finger_body_id_env, 0:3]
+        self.hand_dof_pos = self.dof_pos[:, -self.num_hand_dofs:]
 
-        self.gripper_dof_pos = self.dof_pos[:, 7:9]
+        # self.fingertip_centered_pos = self.body_pos[:, self.fingertip_centered_body_id_env, 0:3]
+        # self.fingertip_centered_quat = self.body_quat[:, self.fingertip_centered_body_id_env, 0:4]
+        # self.fingertip_centered_linvel = self.body_linvel[:, self.fingertip_centered_body_id_env, 0:3]
+        # self.fingertip_centered_angvel = self.body_angvel[:, self.fingertip_centered_body_id_env, 0:3]
+        # self.fingertip_centered_jacobian = self.jacobian[:, self.fingertip_centered_body_id_env - 1, 0:6, 0:7]  # minus 1 because base is fixed
 
-        self.fingertip_centered_pos = self.body_pos[:, self.fingertip_centered_body_id_env, 0:3]
-        self.fingertip_centered_quat = self.body_quat[:, self.fingertip_centered_body_id_env, 0:4]
-        self.fingertip_centered_linvel = self.body_linvel[:, self.fingertip_centered_body_id_env, 0:3]
-        self.fingertip_centered_angvel = self.body_angvel[:, self.fingertip_centered_body_id_env, 0:3]
-        self.fingertip_centered_jacobian = self.jacobian[:, self.fingertip_centered_body_id_env - 1, 0:6, 0:7]  # minus 1 because base is fixed
-
-        self.fingertip_midpoint_pos = self.fingertip_centered_pos.detach().clone()  # initial value
-        self.fingertip_midpoint_quat = self.fingertip_centered_quat  # always equal
-        self.fingertip_midpoint_linvel = self.fingertip_centered_linvel.detach().clone()  # initial value
+        # self.fingertip_midpoint_pos = self.fingertip_centered_pos.detach().clone()  # initial value
+        # self.fingertip_midpoint_quat = self.fingertip_centered_quat  # always equal
+        # self.fingertip_midpoint_linvel = self.fingertip_centered_linvel.detach().clone()  # initial value
         # From sum of angular velocities (https://physics.stackexchange.com/questions/547698/understanding-addition-of-angular-velocity),
         # angular velocity of midpoint w.r.t. world is equal to sum of
         # angular velocity of midpoint w.r.t. hand and angular velocity of hand w.r.t. world. 
         # Midpoint is in sliding contact (i.e., linear relative motion) with hand; angular velocity of midpoint w.r.t. hand is zero.
         # Thus, angular velocity of midpoint w.r.t. world is equal to angular velocity of hand w.r.t. world.
-        self.fingertip_midpoint_angvel = self.fingertip_centered_angvel  # always equal
-        self.fingertip_midpoint_jacobian = (self.left_finger_jacobian + self.right_finger_jacobian) * 0.5  # approximation
+        # self.fingertip_midpoint_angvel = self.fingertip_centered_angvel  # always equal
+        # self.fingertip_midpoint_jacobian = (self.left_finger_jacobian + self.right_finger_jacobian) * 0.5  # approximation
 
         self.dof_torque = torch.zeros((self.num_envs, self.num_dofs), device=self.device)
         self.fingertip_contact_wrench = torch.zeros((self.num_envs, 6), device=self.device)
@@ -248,7 +238,7 @@ class XarmBase(VecTask, FactoryABCBase):
         self.ctrl_target_wrist_pos = torch.zeros((self.num_envs, 3), device=self.device)
         self.ctrl_target_wrist_quat = torch.zeros((self.num_envs, 4), device=self.device)
         self.ctrl_target_dof_pos = torch.zeros((self.num_envs, self.num_dofs), device=self.device)
-        self.ctrl_target_gripper_dof_pos = torch.zeros((self.num_envs, 2), device=self.device)
+        self.ctrl_target_gripper_dof_pos = torch.zeros((self.num_envs, self.num_hand_dofs), device=self.device)
         self.ctrl_target_fingertip_contact_wrench = torch.zeros((self.num_envs, 6), device=self.device)
 
         self.prev_actions = torch.zeros((self.num_envs, self.num_actions), device=self.device)
@@ -316,9 +306,9 @@ class XarmBase(VecTask, FactoryABCBase):
                                                              device=self.device).repeat((self.num_envs, 1))
             self.cfg_ctrl['joint_deriv_gains'] = torch.tensor(self.cfg_task.ctrl.gym_default.joint_deriv_gains,
                                                               device=self.device).repeat((self.num_envs, 1))
-            self.cfg_ctrl['gripper_prop_gains'] = torch.tensor(self.cfg_task.ctrl.gym_default.gripper_prop_gains,
+            self.cfg_ctrl['hand_prop_gains'] = torch.tensor(self.cfg_task.ctrl.gym_default.hand_prop_gains,
                                                                device=self.device).repeat((self.num_envs, 1))
-            self.cfg_ctrl['gripper_deriv_gains'] = torch.tensor(self.cfg_task.ctrl.gym_default.gripper_deriv_gains,
+            self.cfg_ctrl['hand_deriv_gains'] = torch.tensor(self.cfg_task.ctrl.gym_default.hand_deriv_gains,
                                                                 device=self.device).repeat((self.num_envs, 1))
         elif ctrl_type == 'joint_space_ik':
             self.cfg_ctrl['motor_ctrl_mode'] = 'manual'
@@ -402,9 +392,9 @@ class XarmBase(VecTask, FactoryABCBase):
 
         if self.cfg_ctrl['motor_ctrl_mode'] == 'gym':
             prop_gains = torch.cat((self.cfg_ctrl['joint_prop_gains'],
-                                    self.cfg_ctrl['gripper_prop_gains']), dim=-1).to('cpu')
+                                    self.cfg_ctrl['hand_prop_gains']), dim=-1).to('cpu')
             deriv_gains = torch.cat((self.cfg_ctrl['joint_deriv_gains'],
-                                     self.cfg_ctrl['gripper_deriv_gains']), dim=-1).to('cpu')
+                                     self.cfg_ctrl['hand_deriv_gains']), dim=-1).to('cpu')
             # No tensor API for getting/setting actor DOF props; thus, loop required
             for env_ptr, franka_handle, prop_gain, deriv_gain in zip(self.env_ptrs, self.franka_handles, prop_gains,
                                                                      deriv_gains):

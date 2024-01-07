@@ -131,9 +131,7 @@ class XarmTask(XarmEnv, FactoryABCTask):
 
         self.actions = actions.clone().to(self.device)  # shape = (num_envs, num_actions); values = [-1, 1]
 
-        self._apply_actions_as_ctrl_targets(actions=self.actions,
-                                            ctrl_target_gripper_dof_pos=self.asset_info_franka_table.franka_gripper_width_max,
-                                            do_scale=True)
+        self._apply_actions_as_ctrl_targets(actions=self.actions,do_scale=True)
 
     def post_physics_step(self):
         """Step buffers. Refresh tensors. Compute observations and reward. Reset environments."""
@@ -146,7 +144,7 @@ class XarmTask(XarmEnv, FactoryABCTask):
         if self.cfg_task.env.close_and_lift:
             # At this point, robot has executed RL policy. Now close gripper and lift (open-loop)
             if is_last_step:
-                self._close_gripper(sim_steps=self.cfg_task.env.num_gripper_close_sim_steps)
+                #self._close_gripper(sim_steps=self.cfg_task.env.num_gripper_close_sim_steps)
                 self._lift_gripper(sim_steps=self.cfg_task.env.num_gripper_lift_sim_steps)
 
         self.refresh_base_tensors()
@@ -217,8 +215,7 @@ class XarmTask(XarmEnv, FactoryABCTask):
 
         self.dof_pos[env_ids] = torch.cat(
             (torch.tensor(self.cfg_task.randomize.franka_arm_initial_dof_pos, device=self.device),
-             torch.tensor([self.asset_info_franka_table.franka_gripper_width_max], device=self.device),
-             torch.tensor([self.asset_info_franka_table.franka_gripper_width_max], device=self.device)),
+             torch.tensor(self.cfg_task.randomize.hand_initial_dof_pos, device=self.device)),
             dim=-1).unsqueeze(0).repeat((self.num_envs, 1))  # shape = (num_envs, num_dofs)
         self.dof_vel[env_ids] = 0.0  # shape = (num_envs, num_dofs)
         self.ctrl_target_dof_pos[env_ids] = self.dof_pos[env_ids]
@@ -289,7 +286,7 @@ class XarmTask(XarmEnv, FactoryABCTask):
         cam_target = gymapi.Vec3(0.0, 0.0, 0.5)
         self.gym.viewer_camera_look_at(self.viewer, None, cam_pos, cam_target)
 
-    def _apply_actions_as_ctrl_targets(self, actions, ctrl_target_gripper_dof_pos, do_scale):
+    def _apply_actions_as_ctrl_targets(self, actions,  do_scale):
         """Apply actions from policy as position/rotation targets."""
 
         # Interpret actions as target pos displacements and set pos target
@@ -329,7 +326,7 @@ class XarmTask(XarmEnv, FactoryABCTask):
 
             self.ctrl_target_fingertip_contact_wrench = torch.cat((force_actions, torque_actions), dim=-1)
 
-        self.ctrl_target_gripper_dof_pos = ctrl_target_gripper_dof_pos
+        self.ctrl_target_gripper_dof_pos = actions[:, -self.num_hand_dofs:]
 
         self.generate_ctrl_signals()
 
@@ -374,7 +371,7 @@ class XarmTask(XarmEnv, FactoryABCTask):
         # Step sim
         for i in range(sim_steps):
             print('lift',i)
-            self._apply_actions_as_ctrl_targets(delta_hand_pose, franka_gripper_width, do_scale=False)
+            self._apply_actions_as_ctrl_targets(delta_hand_pose, do_scale=False)
             self.render()
             self.gym.simulate(self.sim)
 
@@ -436,8 +433,9 @@ class XarmTask(XarmEnv, FactoryABCTask):
             actions = torch.zeros((self.num_envs, self.cfg_task.env.numActions), device=self.device)
             actions[:, :6] = delta_hand_pose
 
+            #TODO: randomize hand pose
+
             self._apply_actions_as_ctrl_targets(actions=actions,
-                                                ctrl_target_gripper_dof_pos=self.asset_info_franka_table.franka_gripper_width_max,
                                                 do_scale=False)
 
             self.gym.simulate(self.sim)

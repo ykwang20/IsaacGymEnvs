@@ -49,7 +49,7 @@ def compute_dof_pos_target(cfg_ctrl,
                            device):
     """Compute Franka DOF position target to move fingertips towards target pose."""
 
-    ctrl_target_dof_pos = torch.zeros((cfg_ctrl['num_envs'], 9), device=device)
+    ctrl_target_dof_pos = torch.zeros((cfg_ctrl['num_envs'], 23), device=device)
 
     pos_error, axis_angle_error = get_pose_error(
         wrist_pos=wrist_pos,
@@ -66,7 +66,7 @@ def compute_dof_pos_target(cfg_ctrl,
                                            device=device)
 
     ctrl_target_dof_pos[:, 0:7] = arm_dof_pos + delta_arm_dof_pos
-    ctrl_target_dof_pos[:, 7:9] = ctrl_target_gripper_dof_pos  # gripper finger joints
+    ctrl_target_dof_pos[:, 7:23] = ctrl_target_gripper_dof_pos  # gripper finger joints
 
     return ctrl_target_dof_pos
 

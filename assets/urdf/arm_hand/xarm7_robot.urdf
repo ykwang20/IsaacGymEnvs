@@ -251,6 +251,8 @@
     <limit effort="20" lower="-6.28318530718" upper="6.28318530718" velocity="3.14"/>
     <dynamics damping="2" friction="1"/>
   </joint>
+
+  
   <transmission name="tran1">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="joint1">

@@ -14,7 +14,7 @@ sim:
 env:
     numEnvs: ${resolve_default:128,${...num_envs}}
     numObservations: 20
-    numActions: 12
+    numActions: 26
 
     close_and_lift: True  # close gripper and lift after last step of episode
     num_gripper_move_sim_steps: 20  # number of timesteps to reserve for moving gripper before first step of episode
@@ -23,6 +23,7 @@ env:
 
 randomize:
     franka_arm_initial_dof_pos: [0., 0., 0., 1.,  0.,  1.0185,  0.]
+    hand_initial_dof_pos: [0., 0.,0., 0.,0., 0.,0., 0.,0., 0.,0., 0.,0., 0.,0., 0.]
     fingertip_midpoint_pos_initial: [0.0, -0.2, 0.2]  # initial position of hand above table
     fingertip_midpoint_pos_noise: [0.2, 0.2, 0.1]  # noise on hand position
     fingertip_midpoint_rot_initial: [3.1416, 0, 3.1416]  # initial rotation of fingertips (Euler)
@@ -61,12 +62,13 @@ ctrl:
         jacobian_type: geometric
         gripper_prop_gains: [50, 50]
         gripper_deriv_gains: [2, 2]
+
     gym_default:
         ik_method: dls
         joint_prop_gains: [40, 40, 40, 40, 40, 40, 40]
         joint_deriv_gains: [8, 8, 8, 8, 8, 8, 8]
-        gripper_prop_gains: [500, 500]
-        gripper_deriv_gains: [20, 20]
+        hand_prop_gains: [500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500]
+        hand_deriv_gains: [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
     joint_space_ik:
         ik_method: dls
         joint_prop_gains: [1, 1, 1, 1, 1, 1, 1]

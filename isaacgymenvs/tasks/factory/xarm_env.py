@@ -286,6 +286,8 @@ class XarmEnv(XarmBase, FactoryABCEnv):
         self.num_actors = int(actor_count / self.num_envs)  # per env
         self.num_bodies = self.gym.get_env_rigid_body_count(env_ptr)  # per env
         self.num_dofs = self.gym.get_env_dof_count(env_ptr)  # per env
+        self.num_arm_dofs=7
+        self.num_hand_dofs=16
 
         # For setting targets
         self.franka_actor_ids_sim = torch.tensor(self.franka_actor_ids_sim, dtype=torch.int32, device=self.device)
@@ -301,15 +303,9 @@ class XarmEnv(XarmBase, FactoryABCEnv):
         self.bolt_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, bolt_handle, 'bolt', gymapi.DOMAIN_ENV)
         self.wrist_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'link7',
                                                                      gymapi.DOMAIN_ENV)
-        self.hand_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'panda_hand',
+        self.hand_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'palm_link',
                                                                      gymapi.DOMAIN_ENV)
-        self.left_finger_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'panda_leftfinger',
-                                                                            gymapi.DOMAIN_ENV)
-        self.right_finger_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle,
-                                                                             'panda_rightfinger', gymapi.DOMAIN_ENV)
-        self.fingertip_centered_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle,
-                                                                                   'panda_fingertip_centered',
-                                                                                   gymapi.DOMAIN_ENV)
+        
 
         # For computing body COM pos
         self.nut_heights = torch.tensor(self.nut_heights, device=self.device).unsqueeze(-1)
