@@ -196,6 +196,12 @@ class XarmBase(VecTask, FactoryABCBase):
         self.arm_dof_pos = self.dof_pos[:, 0:7]
         self.arm_mass_matrix = self.mass_matrix[:, 0:7, 0:7]  # for Franka arm (not gripper)
 
+        self.wrist_pos = self.body_pos[:, self.wrist_body_id_env, 0:3]
+        self.wrist_quat = self.body_quat[:, self.wrist_body_id_env, 0:4]
+        self.wrist_linvel = self.body_linvel[:, self.wrist_body_id_env, 0:3]
+        self.wrist_angvel = self.body_angvel[:, self.wrist_body_id_env, 0:3]
+        self.wrist_jacobian = self.jacobian[:, self.wrist_body_id_env - 1, 0:6, 0:7]  # minus 1 because base is fixed
+
         self.hand_pos = self.body_pos[:, self.hand_body_id_env, 0:3]
         self.hand_quat = self.body_quat[:, self.hand_body_id_env, 0:4]
         self.hand_linvel = self.body_linvel[:, self.hand_body_id_env, 0:3]
@@ -239,8 +245,8 @@ class XarmBase(VecTask, FactoryABCBase):
         self.dof_torque = torch.zeros((self.num_envs, self.num_dofs), device=self.device)
         self.fingertip_contact_wrench = torch.zeros((self.num_envs, 6), device=self.device)
 
-        self.ctrl_target_fingertip_midpoint_pos = torch.zeros((self.num_envs, 3), device=self.device)
-        self.ctrl_target_fingertip_midpoint_quat = torch.zeros((self.num_envs, 4), device=self.device)
+        self.ctrl_target_wrist_pos = torch.zeros((self.num_envs, 3), device=self.device)
+        self.ctrl_target_wrist_quat = torch.zeros((self.num_envs, 4), device=self.device)
         self.ctrl_target_dof_pos = torch.zeros((self.num_envs, self.num_dofs), device=self.device)
         self.ctrl_target_gripper_dof_pos = torch.zeros((self.num_envs, 2), device=self.device)
         self.ctrl_target_fingertip_contact_wrench = torch.zeros((self.num_envs, 6), device=self.device)
@@ -259,16 +265,16 @@ class XarmBase(VecTask, FactoryABCBase):
         self.gym.refresh_jacobian_tensors(self.sim)
         self.gym.refresh_mass_matrix_tensors(self.sim)
 
-        self.finger_midpoint_pos = (self.left_finger_pos + self.right_finger_pos) * 0.5
-        self.fingertip_midpoint_pos = fc.translate_along_local_z(pos=self.finger_midpoint_pos,
-                                                                 quat=self.hand_quat,
-                                                                 offset=self.asset_info_franka_table.franka_finger_length,
-                                                                 device=self.device)
-        # TODO: Add relative velocity term (see https://dynamicsmotioncontrol487379916.files.wordpress.com/2020/11/21-me258pointmovingrigidbody.pdf)
-        self.fingertip_midpoint_linvel = self.fingertip_centered_linvel + torch.cross(self.fingertip_centered_angvel,
-                                                                                      (self.fingertip_midpoint_pos - self.fingertip_centered_pos),
-                                                                                      dim=1)
-        self.fingertip_midpoint_jacobian = (self.left_finger_jacobian + self.right_finger_jacobian) * 0.5  # approximation
+        # self.finger_midpoint_pos = (self.left_finger_pos + self.right_finger_pos) * 0.5
+        # self.fingertip_midpoint_pos = fc.translate_along_local_z(pos=self.finger_midpoint_pos,
+        #                                                          quat=self.hand_quat,
+        #                                                          offset=self.asset_info_franka_table.franka_finger_length,
+        #                                                          device=self.device)
+        # # TODO: Add relative velocity term (see https://dynamicsmotioncontrol487379916.files.wordpress.com/2020/11/21-me258pointmovingrigidbody.pdf)
+        # self.fingertip_midpoint_linvel = self.fingertip_centered_linvel + torch.cross(self.fingertip_centered_angvel,
+        #                                                                               (self.fingertip_midpoint_pos - self.fingertip_centered_pos),
+        #                                                                               dim=1)
+        # self.fingertip_midpoint_jacobian = (self.left_finger_jacobian + self.right_finger_jacobian) * 0.5  # approximation
 
 
     def parse_controller_spec(self):
@@ -421,7 +427,8 @@ class XarmBase(VecTask, FactoryABCBase):
 
         # Get desired Jacobian
         if self.cfg_ctrl['jacobian_type'] == 'geometric':
-            self.fingertip_midpoint_jacobian_tf = self.fingertip_midpoint_jacobian
+            #self.fingertip_midpoint_jacobian_tf = self.fingertip_midpoint_jacobian
+            self.wrist_jacobian_tf=self.wrist_jacobian
         elif self.cfg_ctrl['jacobian_type'] == 'analytic':
             self.fingertip_midpoint_jacobian_tf = fc.get_analytic_jacobian(
                 fingertip_quat=self.fingertip_quat,
@@ -441,11 +448,11 @@ class XarmBase(VecTask, FactoryABCBase):
         self.ctrl_target_dof_pos = fc.compute_dof_pos_target(
             cfg_ctrl=self.cfg_ctrl,
             arm_dof_pos=self.arm_dof_pos,
-            fingertip_midpoint_pos=self.fingertip_midpoint_pos,
-            fingertip_midpoint_quat=self.fingertip_midpoint_quat,
-            jacobian=self.fingertip_midpoint_jacobian_tf,
-            ctrl_target_fingertip_midpoint_pos=self.ctrl_target_fingertip_midpoint_pos,
-            ctrl_target_fingertip_midpoint_quat=self.ctrl_target_fingertip_midpoint_quat,
+            wrist_pos=self.wrist_pos,
+            wrist_quat=self.wrist_quat,
+            jacobian=self.wrist_jacobian_tf,
+            ctrl_target_wrist_pos=self.ctrl_target_wrist_pos,
+            ctrl_target_wrist_quat=self.ctrl_target_wrist_quat,
             ctrl_target_gripper_dof_pos=self.ctrl_target_gripper_dof_pos,
             device=self.device)
         print('ctrl_target_dof_pos',self.ctrl_target_dof_pos[0])
@@ -462,17 +469,17 @@ class XarmBase(VecTask, FactoryABCBase):
             cfg_ctrl=self.cfg_ctrl,
             dof_pos=self.dof_pos,
             dof_vel=self.dof_vel,
-            fingertip_midpoint_pos=self.fingertip_midpoint_pos,
-            fingertip_midpoint_quat=self.fingertip_midpoint_quat,
-            fingertip_midpoint_linvel=self.fingertip_midpoint_linvel,
-            fingertip_midpoint_angvel=self.fingertip_midpoint_angvel,
+            wrist_pos=self.wrist_pos,
+            wrist_quat=self.wrist_quat,
+            wrist_linvel=self.wrist_linvel,
+            wrist_angvel=self.wrist_angvel,
             left_finger_force=self.left_finger_force,
             right_finger_force=self.right_finger_force,
-            jacobian=self.fingertip_midpoint_jacobian_tf,
+            jacobian=self.wrist_jacobian_tf,
             arm_mass_matrix=self.arm_mass_matrix,
             ctrl_target_gripper_dof_pos=self.ctrl_target_gripper_dof_pos,
-            ctrl_target_fingertip_midpoint_pos=self.ctrl_target_fingertip_midpoint_pos,
-            ctrl_target_fingertip_midpoint_quat=self.ctrl_target_fingertip_midpoint_quat,
+            ctrl_target_wrist_pos=self.ctrl_target_wrist_pos,
+            ctrl_target_wrist_quat=self.ctrl_target_wrist_quat,
             ctrl_target_fingertip_contact_wrench=self.ctrl_target_fingertip_contact_wrench,
             device=self.device)
 

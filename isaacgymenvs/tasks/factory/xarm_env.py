@@ -299,6 +299,8 @@ class XarmEnv(XarmBase, FactoryABCEnv):
         # For extracting body pos/quat, force, and Jacobian
         self.nut_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, nut_handle, 'nut', gymapi.DOMAIN_ENV)
         self.bolt_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, bolt_handle, 'bolt', gymapi.DOMAIN_ENV)
+        self.wrist_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'link7',
+                                                                     gymapi.DOMAIN_ENV)
         self.hand_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'panda_hand',
                                                                      gymapi.DOMAIN_ENV)
         self.left_finger_body_id_env = self.gym.find_actor_rigid_body_index(env_ptr, franka_handle, 'panda_leftfinger',

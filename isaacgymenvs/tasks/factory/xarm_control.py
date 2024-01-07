@@ -40,11 +40,11 @@ from isaacgymenvs.utils import torch_jit_utils as torch_utils
 
 def compute_dof_pos_target(cfg_ctrl,
                            arm_dof_pos,
-                           fingertip_midpoint_pos,
-                           fingertip_midpoint_quat,
+                           wrist_pos,
+                           wrist_quat,
                            jacobian,
-                           ctrl_target_fingertip_midpoint_pos,
-                           ctrl_target_fingertip_midpoint_quat,
+                           ctrl_target_wrist_pos,
+                           ctrl_target_wrist_quat,
                            ctrl_target_gripper_dof_pos,
                            device):
     """Compute Franka DOF position target to move fingertips towards target pose."""
@@ -52,10 +52,10 @@ def compute_dof_pos_target(cfg_ctrl,
     ctrl_target_dof_pos = torch.zeros((cfg_ctrl['num_envs'], 9), device=device)
 
     pos_error, axis_angle_error = get_pose_error(
-        fingertip_midpoint_pos=fingertip_midpoint_pos,
-        fingertip_midpoint_quat=fingertip_midpoint_quat,
-        ctrl_target_fingertip_midpoint_pos=ctrl_target_fingertip_midpoint_pos,
-        ctrl_target_fingertip_midpoint_quat=ctrl_target_fingertip_midpoint_quat,
+        wrist_pos=wrist_pos,
+        wrist_quat=wrist_quat,
+        ctrl_target_wrist_pos=ctrl_target_wrist_pos,
+        ctrl_target_wrist_quat=ctrl_target_wrist_quat,
         jacobian_type=cfg_ctrl['jacobian_type'],
         rot_error_type='axis_angle')
 
@@ -74,17 +74,17 @@ def compute_dof_pos_target(cfg_ctrl,
 def compute_dof_torque(cfg_ctrl,
                        dof_pos,
                        dof_vel,
-                       fingertip_midpoint_pos,
-                       fingertip_midpoint_quat,
-                       fingertip_midpoint_linvel,
-                       fingertip_midpoint_angvel,
+                       wrist_pos,
+                       wrist_quat,
+                       wrist_linvel,
+                       wrist_angvel,
                        left_finger_force,
                        right_finger_force,
                        jacobian,
                        arm_mass_matrix,
                        ctrl_target_gripper_dof_pos,
-                       ctrl_target_fingertip_midpoint_pos,
-                       ctrl_target_fingertip_midpoint_quat,
+                       ctrl_target_wrist_pos,
+                       ctrl_target_wrist_quat,
                        ctrl_target_fingertip_contact_wrench,
                        device):
     """Compute Franka DOF torque to move fingertips towards target pose."""
@@ -96,10 +96,10 @@ def compute_dof_torque(cfg_ctrl,
 
     if cfg_ctrl['gain_space'] == 'joint':
         pos_error, axis_angle_error = get_pose_error(
-            fingertip_midpoint_pos=fingertip_midpoint_pos,
-            fingertip_midpoint_quat=fingertip_midpoint_quat,
-            ctrl_target_fingertip_midpoint_pos=ctrl_target_fingertip_midpoint_pos,
-            ctrl_target_fingertip_midpoint_quat=ctrl_target_fingertip_midpoint_quat,
+            wrist_pos=wrist_pos,
+            wrist_quat=wrist_quat,
+            ctrl_target_wrist_pos=ctrl_target_wrist_pos,
+            ctrl_target_wrist_quat=ctrl_target_wrist_quat,
             jacobian_type=cfg_ctrl['jacobian_type'],
             rot_error_type='axis_angle')
         delta_fingertip_pose = torch.cat((pos_error, axis_angle_error), dim=1)
@@ -122,18 +122,18 @@ def compute_dof_torque(cfg_ctrl,
 
         if cfg_ctrl['do_motion_ctrl']:
             pos_error, axis_angle_error = get_pose_error(
-                fingertip_midpoint_pos=fingertip_midpoint_pos,
-                fingertip_midpoint_quat=fingertip_midpoint_quat,
-                ctrl_target_fingertip_midpoint_pos=ctrl_target_fingertip_midpoint_pos,
-                ctrl_target_fingertip_midpoint_quat=ctrl_target_fingertip_midpoint_quat,
+                wrist_pos=wrist_pos,
+                wrist_quat =wrist_quat,
+                ctrl_target_wrist_pos=ctrl_target_wrist_pos,
+                ctrl_target_wrist_quat=ctrl_target_wrist_quat,
                 jacobian_type=cfg_ctrl['jacobian_type'],
                 rot_error_type='axis_angle')
             delta_fingertip_pose = torch.cat((pos_error, axis_angle_error), dim=1)
 
             # Set tau = k_p * task_pos_error - k_d * task_vel_error (building towards eq. 3.96-3.98)
             task_wrench_motion = _apply_task_space_gains(delta_fingertip_pose=delta_fingertip_pose,
-                                                         fingertip_midpoint_linvel=fingertip_midpoint_linvel,
-                                                         fingertip_midpoint_angvel=fingertip_midpoint_angvel,
+                                                         wrist_linvel=wrist_linvel,
+                                                         wrist_angvel=wrist_angvel,
                                                          task_prop_gains=cfg_ctrl['task_prop_gains'],
                                                          task_deriv_gains=cfg_ctrl['task_deriv_gains'])
 
@@ -176,35 +176,35 @@ def compute_dof_torque(cfg_ctrl,
     return dof_torque
 
 
-def get_pose_error(fingertip_midpoint_pos,
-                   fingertip_midpoint_quat,
-                   ctrl_target_fingertip_midpoint_pos,
-                   ctrl_target_fingertip_midpoint_quat,
+def get_pose_error(wrist_pos,
+                   wrist_quat,
+                   ctrl_target_wrist_pos,
+                   ctrl_target_wrist_quat,
                    jacobian_type,
                    rot_error_type):
     """Compute task-space error between target Franka fingertip pose and current pose."""
     # Reference: https://ethz.ch/content/dam/ethz/special-interest/mavt/robotics-n-intelligent-systems/rsl-dam/documents/RobotDynamics2018/RD_HS2018script.pdf
 
     # Compute pos error
-    pos_error = ctrl_target_fingertip_midpoint_pos - fingertip_midpoint_pos
+    pos_error = ctrl_target_wrist_pos - wrist_pos
 
     # Compute rot error
     if jacobian_type == 'geometric':  # See example 2.9.8; note use of J_g and transformation between rotation vectors
         # Compute quat error (i.e., difference quat)
         # Reference: https://personal.utdallas.edu/~sxb027100/dock/quat.html
-        fingertip_midpoint_quat_norm = torch_utils.quat_mul(fingertip_midpoint_quat,
-                                                            torch_utils.quat_conjugate(fingertip_midpoint_quat))[:, 3]  # scalar component
-        fingertip_midpoint_quat_inv = torch_utils.quat_conjugate(
-            fingertip_midpoint_quat) / fingertip_midpoint_quat_norm.unsqueeze(-1)
-        quat_error = torch_utils.quat_mul(ctrl_target_fingertip_midpoint_quat, fingertip_midpoint_quat_inv)
+        wrist_quat_norm = torch_utils.quat_mul(wrist_quat,
+                                                            torch_utils.quat_conjugate(wrist_quat))[:, 3]  # scalar component
+        wrist_quat_inv = torch_utils.quat_conjugate(
+            wrist_quat) / wrist_quat_norm.unsqueeze(-1)
+        quat_error = torch_utils.quat_mul(ctrl_target_wrist_quat, wrist_quat_inv)
 
         # Convert to axis-angle error
         axis_angle_error = axis_angle_from_quat(quat_error)
 
     elif jacobian_type == 'analytic':  # See example 2.9.7; note use of J_a and difference of rotation vectors
         # Compute axis-angle error
-        axis_angle_error = axis_angle_from_quat(ctrl_target_fingertip_midpoint_quat)\
-                           - axis_angle_from_quat(fingertip_midpoint_quat)
+        axis_angle_error = axis_angle_from_quat(ctrl_target_wrist_quat)\
+                           - axis_angle_from_quat(wrist_quat)
 
     if rot_error_type == 'quat':
         return pos_error, quat_error
@@ -269,8 +269,8 @@ def _get_delta_dof_pos(delta_pose, ik_method, jacobian, device):
 
 
 def _apply_task_space_gains(delta_fingertip_pose,
-                            fingertip_midpoint_linvel,
-                            fingertip_midpoint_angvel,
+                            wrist_linvel,
+                            wrist_angvel,
                             task_prop_gains,
                             task_deriv_gains):
     """Interpret PD gains as task-space gains. Apply to task-space error."""
@@ -280,12 +280,12 @@ def _apply_task_space_gains(delta_fingertip_pose,
     # Apply gains to lin error components
     lin_error = delta_fingertip_pose[:, 0:3]
     task_wrench[:, 0:3] = task_prop_gains[:, 0:3] * lin_error + \
-                          task_deriv_gains[:, 0:3] * (0.0 - fingertip_midpoint_linvel)
+                          task_deriv_gains[:, 0:3] * (0.0 - wrist_linvel)
 
     # Apply gains to rot error components
     rot_error = delta_fingertip_pose[:, 3:6]
     task_wrench[:, 3:6] = task_prop_gains[:, 3:6] * rot_error + \
-                          task_deriv_gains[:, 3:6] * (0.0 - fingertip_midpoint_angvel)
+                          task_deriv_gains[:, 3:6] * (0.0 - wrist_angvel)
 
     return task_wrench
 

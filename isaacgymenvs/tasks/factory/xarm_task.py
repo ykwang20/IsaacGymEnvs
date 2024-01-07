@@ -113,8 +113,8 @@ class XarmTask(XarmEnv, FactoryABCTask):
 
         # Compute pos of keypoints on gripper and nut in world frame
         for idx, keypoint_offset in enumerate(self.keypoint_offsets):
-            self.keypoints_gripper[:, idx] = torch_jit_utils.tf_combine(self.fingertip_midpoint_quat,
-                                                                        self.fingertip_midpoint_pos,
+            self.keypoints_gripper[:, idx] = torch_jit_utils.tf_combine(self.wrist_quat,
+                                                                        self.wrist_pos,
                                                                         self.identity_quat,
                                                                         keypoint_offset.repeat(self.num_envs, 1))[1]
             self.keypoints_nut[:, idx] = torch_jit_utils.tf_combine(self.nut_grasp_quat,
@@ -159,10 +159,10 @@ class XarmTask(XarmEnv, FactoryABCTask):
         """Compute observations."""
 
         # Shallow copies of tensors
-        obs_tensors = [self.fingertip_midpoint_pos,
-                       self.fingertip_midpoint_quat,
-                       self.fingertip_midpoint_linvel,
-                       self.fingertip_midpoint_angvel,
+        obs_tensors = [self.wrist_pos,
+                       self.wrist_quat,
+                       self.wrist_linvel,
+                       self.wrist_angvel,
                        self.nut_grasp_pos,
                        self.nut_grasp_quat]
 
@@ -296,8 +296,8 @@ class XarmTask(XarmEnv, FactoryABCTask):
         pos_actions = actions[:, 0:3]
         if do_scale:
             pos_actions = pos_actions @ torch.diag(torch.tensor(self.cfg_task.rl.pos_action_scale, device=self.device))
-        self.ctrl_target_fingertip_midpoint_pos = self.fingertip_midpoint_pos + pos_actions
-        print('fingertip_mid_pos',self.fingertip_midpoint_pos[0])
+        self.ctrl_target_wrist_pos = self.wrist_pos + pos_actions
+        print('wrist_pos',self.wrist_pos[0])
 
         # Interpret actions as target rot (axis-angle) displacements
         rot_actions = actions[:, 3:6]
@@ -313,7 +313,7 @@ class XarmTask(XarmEnv, FactoryABCTask):
                                            rot_actions_quat,
                                            torch.tensor([0.0, 0.0, 0.0, 1.0], device=self.device).repeat(self.num_envs,
                                                                                                          1))
-        self.ctrl_target_fingertip_midpoint_quat = torch_utils.quat_mul(rot_actions_quat, self.fingertip_midpoint_quat)
+        self.ctrl_target_wrist_quat = torch_utils.quat_mul(rot_actions_quat, self.wrist_quat)
 
         if self.cfg_ctrl['do_force_ctrl']:
             # Interpret actions as target forces and target torques
@@ -392,31 +392,31 @@ class XarmTask(XarmEnv, FactoryABCTask):
         """Move gripper to random pose."""
 
         # Set target pos above table
-        self.ctrl_target_fingertip_midpoint_pos = \
+        self.ctrl_target_wrist_pos = \
             torch.tensor([0.0, 0.0, self.cfg_base.env.table_height], device=self.device) \
             + torch.tensor(self.cfg_task.randomize.fingertip_midpoint_pos_initial, device=self.device)
-        self.ctrl_target_fingertip_midpoint_pos = self.ctrl_target_fingertip_midpoint_pos.unsqueeze(0).repeat(self.num_envs, 1)
+        self.ctrl_target_wrist_pos = self.ctrl_target_wrist_pos.unsqueeze(0).repeat(self.num_envs, 1)
 
-        fingertip_midpoint_pos_noise = \
+        wrist_pos_noise = \
             2 * (torch.rand((self.num_envs, 3), dtype=torch.float32, device=self.device) - 0.5)  # [-1, 1]
-        fingertip_midpoint_pos_noise = \
-            fingertip_midpoint_pos_noise @ torch.diag(torch.tensor(self.cfg_task.randomize.fingertip_midpoint_pos_noise,
+        wrist_pos_noise = \
+            wrist_pos_noise @ torch.diag(torch.tensor(self.cfg_task.randomize.fingertip_midpoint_pos_noise,
                                                                    device=self.device))
-        self.ctrl_target_fingertip_midpoint_pos += fingertip_midpoint_pos_noise
+        self.ctrl_target_wrist_pos += wrist_pos_noise
 
         # Set target rot
-        ctrl_target_fingertip_midpoint_euler = torch.tensor(self.cfg_task.randomize.fingertip_midpoint_rot_initial,
+        ctrl_target_wrist_euler = torch.tensor(self.cfg_task.randomize.fingertip_midpoint_rot_initial,
                                                             device=self.device).unsqueeze(0).repeat(self.num_envs, 1)
 
-        fingertip_midpoint_rot_noise = \
+        wrist_rot_noise = \
             2 * (torch.rand((self.num_envs, 3), dtype=torch.float32, device=self.device) - 0.5)  # [-1, 1]
-        fingertip_midpoint_rot_noise = fingertip_midpoint_rot_noise @ torch.diag(
+        wrist_rot_noise = wrist_rot_noise @ torch.diag(
             torch.tensor(self.cfg_task.randomize.fingertip_midpoint_rot_noise, device=self.device))
-        ctrl_target_fingertip_midpoint_euler += fingertip_midpoint_rot_noise
-        self.ctrl_target_fingertip_midpoint_quat = torch_utils.quat_from_euler_xyz(
-            ctrl_target_fingertip_midpoint_euler[:, 0],
-            ctrl_target_fingertip_midpoint_euler[:, 1],
-            ctrl_target_fingertip_midpoint_euler[:, 2])
+        ctrl_target_wrist_euler += wrist_rot_noise
+        self.ctrl_target_wrist_quat = torch_utils.quat_from_euler_xyz(
+            ctrl_target_wrist_euler[:, 0],
+            ctrl_target_wrist_euler[:, 1],
+            ctrl_target_wrist_euler[:, 2])
 
         # Step sim and render
         for _ in range(sim_steps):
@@ -425,10 +425,10 @@ class XarmTask(XarmEnv, FactoryABCTask):
             self._refresh_task_tensors()
 
             pos_error, axis_angle_error = fc.get_pose_error(
-                fingertip_midpoint_pos=self.fingertip_midpoint_pos,
-                fingertip_midpoint_quat=self.fingertip_midpoint_quat,
-                ctrl_target_fingertip_midpoint_pos=self.ctrl_target_fingertip_midpoint_pos,
-                ctrl_target_fingertip_midpoint_quat=self.ctrl_target_fingertip_midpoint_quat,
+                wrist_pos=self.wrist_pos,
+                wrist_quat=self.wrist_quat,
+                ctrl_target_wrist_pos=self.ctrl_target_wrist_pos,
+                ctrl_target_wrist_quat=self.ctrl_target_wrist_quat,
                 jacobian_type=self.cfg_ctrl['jacobian_type'],
                 rot_error_type='axis_angle')
 
