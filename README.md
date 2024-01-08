@@ -2,7 +2,7 @@
 
 [Website](https://developer.nvidia.com/isaac-gym) | [Technical Paper](https://arxiv.org/abs/2108.10470) | [Videos](https://sites.google.com/view/isaacgym-nvidia)
 
-### ISSUE
+### REMAINED ISSUE
 After replacing gripper with hand, the cuda memory error ocuurs. It can be fixed by unabling all the SDFs. Don't know why.
 
 ### TODO
