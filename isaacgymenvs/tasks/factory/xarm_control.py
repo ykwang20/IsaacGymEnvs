@@ -66,7 +66,7 @@ def compute_dof_pos_target(cfg_ctrl,
                                            device=device)
 
     ctrl_target_dof_pos[:, 0:7] = arm_dof_pos + delta_arm_dof_pos
-    ctrl_target_dof_pos[:, 7:23] = ctrl_target_gripper_dof_pos  # gripper finger joints
+    ctrl_target_dof_pos[:, 7:] = ctrl_target_gripper_dof_pos  # gripper finger joints
 
     return ctrl_target_dof_pos
 

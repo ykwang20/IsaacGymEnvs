@@ -445,12 +445,13 @@ class XarmBase(VecTask, FactoryABCBase):
             ctrl_target_wrist_quat=self.ctrl_target_wrist_quat,
             ctrl_target_gripper_dof_pos=self.ctrl_target_gripper_dof_pos,
             device=self.device)
-        print('ctrl_target_dof_pos',self.ctrl_target_dof_pos[0])
+        print('ctrl_target_dof_pos',self.ctrl_target_dof_pos.shape)
 
         self.gym.set_dof_position_target_tensor_indexed(self.sim,
                                                         gymtorch.unwrap_tensor(self.ctrl_target_dof_pos),
                                                         gymtorch.unwrap_tensor(self.franka_actor_ids_sim),
                                                         len(self.franka_actor_ids_sim))
+        
 
     def _set_dof_torque(self):
         """Set Franka DOF torque to move fingertips towards target pose."""
